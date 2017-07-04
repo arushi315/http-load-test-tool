@@ -1,13 +1,10 @@
 package com.http.load.tool.dataobjects;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 /**
  * Created by manish kumar.
@@ -80,6 +77,14 @@ public class TestStatus {
 
     public AtomicLong getOpenRequestsCountPerOperation(final String operationType) {
         return openRequestsCountPerOperation.get(operationType);
+    }
+
+    public Map<String, AtomicLong> getTotalRequestsCountPerOperation() {
+        return totalRequestsCountPerOperation;
+    }
+
+    public Map<String, AtomicLong> getOpenRequestsCountPerOperation() {
+        return openRequestsCountPerOperation;
     }
 
     public AtomicLong getTimeTaken(final String operationType) {
@@ -213,44 +218,7 @@ public class TestStatus {
         return this;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder builder = new StringBuilder();
-        final List<String> avgTimeForAll = new ArrayList<>();
-        totalRequestsCountPerOperation.forEach((operationType, value) -> {
-            double avgTime = 0D;
-            if (value.get() > 0) {
-                avgTime = getTimeTaken(operationType).get() / value.get();
-            }
-            avgTimeForAll.add(Double.toString(avgTime));
-            builder.append(" Avg time for ").append(operationType).append(" is ").append(avgTime).append(".\n");
-        });
-        totalRequestsCountPerOperation.forEach((operationType, value) -> {
-            builder
-                    .append(" Total requests for ").append(operationType)
-                    .append(" is ").append(value)
-                    .append(", open connection count is ").append(getOpenRequestsCountPerOperation(operationType))
-                    .append(".\n");
-        });
-
-        long testDuration = getTestStartTime() > 0 ? ((System.currentTimeMillis() - getTestStartTime()) / 1000) : 0;
-
-        // Printing some data on Console as well.
-        System.out.println("\n\n\n\n Test Duration = " + testDuration + " Seconds"
-                + "\n Open connections to remote server = " + getOpenConnections()
-                + "\n Total requests = " + (getTotalRequests().get() - 1)
-                + "\n Success = " + successCount
-                + "\n Error = " + getErrorCount()
-                + "\n Error types with count = " + getErrorsType()
-                + "\n Non 200 response " + getNon200Responses()
-                + "\n " + builder.toString());
-
-        // This is specifically used to generate the data in CSV format that so user can process the log to generate graphs etc.
-        return testDuration
-                + "," + getOpenConnections()
-                + "," + successCount
-                + "," + getErrorCount()
-                + "," + getTotalRequests()
-                + "," + avgTimeForAll.stream().collect(Collectors.joining(","));
+    public AtomicLong getSuccessCount() {
+        return successCount;
     }
 }
