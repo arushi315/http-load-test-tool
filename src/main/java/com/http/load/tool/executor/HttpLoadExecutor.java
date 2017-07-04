@@ -96,17 +96,7 @@ public class HttpLoadExecutor {
         testInput.getHttpLoadInput().getRemoteOperations().forEach(remoteOperation -> {
             IntStream.rangeClosed(1, 3).forEach(value -> {
                 timers.add(vertx.setPeriodic(100 * value, id -> {
-                    if (openNewConnections()) {
-                        for (int index = 0; index < 60 * value * testStatus.getRampUpTimeMultiplier(); index++) {
-                            if (testStatus.getOpenConnections().get() < testStatus.getMaxOpenConnections().get()) {
-                                long percentage = testStatus.getTotalRequestsCountPerOperation(
-                                        remoteOperation.getOperationType()).get() * 100 / testStatus.getTotalRequests().get();
-                                if (percentage < remoteOperation.getLoadPercentage()) {
-                                    sendRequestToRemote(remoteOperation);
-                                }
-                            }
-                        }
-                    }
+                    makeConnectionBasedRequest(remoteOperation, value);
                 }));
             });
         });
@@ -120,6 +110,20 @@ public class HttpLoadExecutor {
                 }
             }));
         });
+    }
+
+    private void makeConnectionBasedRequest(final RemoteOperation remoteOperation, final int value) {
+        if (openNewConnections()) {
+            for (int index = 0; index < 60 * value * testStatus.getRampUpTimeMultiplier(); index++) {
+                if (testStatus.getOpenConnections().get() < testStatus.getMaxOpenConnections().get()) {
+                    long percentage = testStatus.getTotalRequestsCountPerOperation(
+                            remoteOperation.getOperationType()).get() * 100 / testStatus.getTotalRequests().get();
+                    if (percentage < remoteOperation.getLoadPercentage()) {
+                        sendRequestToRemote(remoteOperation);
+                    }
+                }
+            }
+        }
     }
 
     private void sendRequestToRemote(final RemoteOperation remoteOperation) {
@@ -159,7 +163,7 @@ public class HttpLoadExecutor {
         }
     }
 
-    private void countError(Throwable ex) {
+    private void countError(final Throwable ex) {
         String errorMessage = ex.getMessage();
         if (errorMessage == null) {
             errorMessage = ex.getLocalizedMessage();
@@ -174,8 +178,8 @@ public class HttpLoadExecutor {
     }
 
     private boolean openNewConnections() {
-        return testStatus.getTestStarted().get() && testStatus.getOpenConnections().get() <
-                testStatus.getMaxOpenConnections().get() * testStatus.getRampUpTimeMultiplier();
+        int maxOpenConnections = (int) (testStatus.getMaxOpenConnections().get() * testStatus.getRampUpTimeMultiplier());
+        return testStatus.getTestStarted().get() && testStatus.getOpenConnections().get() < maxOpenConnections;
     }
 
     private String getRemoteHost() {
