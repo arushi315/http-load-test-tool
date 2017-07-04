@@ -1,0 +1,53 @@
+<configuration scan="true" scanPeriod="20 seconds">
+
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d %p \(%t\) [%c] - %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="LOAD_TEST_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <File>logs/load-test.log</File>
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <maxIndex>50</maxIndex>
+            <FileNamePattern>logs/load-test.log.%i</FileNamePattern>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>25MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+    <appender name="TEST_STATUS_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <File>logs/test-status.log</File>
+        <encoder>
+            <pattern>%m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <maxIndex>50</maxIndex>
+            <FileNamePattern>logs/test-status.log.%i</FileNamePattern>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>25MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <appender name="LOAD_TEST_LOG_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOAD_TEST_LOG"/>
+    </appender>
+
+    <appender name="TEST_STATUS_LOG_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="TEST_STATUS_LOG"/>
+    </appender>
+
+    <logger name="com.http.load.tool.StatsPrinter" level="info" additivity="false">
+        <appender-ref ref="TEST_STATUS_LOG_ASYNC"/>
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="LOAD_TEST_LOG_ASYNC"/>
+    </root>
+
+</configuration>
